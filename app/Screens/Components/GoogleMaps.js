@@ -14,9 +14,6 @@ export default function GoogleMaps() {
 	//Zoom of the map
     const delta = 0.058;
 
-	const google_api_key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-
     const [ pinVisible ] = React.useState(true);
 	
 	const [ pin, setPin ] = React.useState({
@@ -56,7 +53,6 @@ export default function GoogleMaps() {
 				}}
 				query={{
 					key: `${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`,
-					//key: "AIzaSyBaDG5mCFaJ0A2DTHhhnEykj0MIH4nktzw",
 					language: 'en',
 					components: "country:ca",
 					types: "establishment",
