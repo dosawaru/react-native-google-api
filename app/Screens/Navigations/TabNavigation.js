@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Search from '../Search';
@@ -9,10 +9,10 @@ import { FontAwesome } from '@expo/vector-icons';
 
 export default function TabNavigation() {
 
-    const Tab = createBottomTabNavigator();
+  const Tab = createBottomTabNavigator();
 
   return (
-    <Tab.Navigator screenOptions ={{headerShown:false}}>
+    <Tab.Navigator screenOptions ={{headerShown:false, tabBarStyle: {height: '8%'}}} style={styles.container} >
       <Tab.Screen name="Home" component={Home} 
       options={{
         tabBarLabel: 'Home',
@@ -44,3 +44,11 @@ export default function TabNavigation() {
     </Tab.Navigator>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    // flex: 0,
+    // alignItems: 'center', // Center horizontally
+    // justifyContent: 'center', // Center vertically
+  },
+});
