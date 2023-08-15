@@ -1,8 +1,10 @@
 import * as React from "react"
 import { Dimensions, StyleSheet, Text, View } from "react-native"
-import MapView, { Callout, Circle, Marker } from "react-native-maps"
+import MapView, { Callout, Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps"
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import {NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} from '@env'
+import {CustomMapStyle} from './../../../CustomMapStyle'
+
 
 
 // const screenHeight = Dimensions.get("window").height;
@@ -45,6 +47,10 @@ export default function GoogleMaps() {
 
 	const handleRegionChange = (newRegion) => {
 		setRegion(newRegion);
+		setPin({
+            latitude: newRegion.latitude,
+            longitude: newRegion.longitude
+        });
 	};
 
 	const handleMapLongPress = (e) => {
@@ -55,7 +61,6 @@ export default function GoogleMaps() {
 		setPin(newPin);
 		setRegion(newPin);
 	};
-
 
 	const mapViewRef = React.createRef();
 	const handlePlaceSelected = (data, details) => {
@@ -86,7 +91,7 @@ export default function GoogleMaps() {
 					key: `${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`,
 					language: 'en',
 					components: "country:ca",
-					//types: "establishment",
+					types: "establishment",
 					radius: 90000,
 					location: `${region.latitude}, ${region.longitude}`
 				}}
@@ -105,6 +110,8 @@ export default function GoogleMaps() {
 				initialRegion={region} // Inital location on new load
 				onRegionChange={handleRegionChange}
 				onLongPress={handleMapLongPress} 
+				provider={PROVIDER_GOOGLE}
+				customMapStyle={CustomMapStyle}
 				//provider="google"
 
 			>
@@ -121,7 +128,7 @@ export default function GoogleMaps() {
 					</Marker>
 				)}
                 {/* draw a circle on the map centered around pin */}
-				<Circle center={pin} radius={1000} fillColor="rgba(255, 192, 203, 0.3)" strokeColor="grey"/>
+				{/* <Circle center={pin} radius={1000} fillColor="rgba(255, 192, 203, 0.3)" strokeColor="grey"/> */}
 
 				{/* shows current coordinate */}
 				<Text style={styles.text}>Current latitude: {region.latitude.toFixed(3)}{'\n'}</Text>
