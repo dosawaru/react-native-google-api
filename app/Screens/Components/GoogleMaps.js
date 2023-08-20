@@ -1,36 +1,72 @@
-import * as React from "react"
-import { Dimensions, StyleSheet, Text, View } from "react-native"
+import * as React from 'react'
+import { Dimensions, StyleSheet, Text, View, ActivityIndicator } from "react-native"
 import MapView, { Callout, Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps"
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import {NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} from '@env'
 import {CustomMapStyle} from './../../../CustomMapStyle'
+import * as Location from 'expo-location';
+import LottieView from "lottie-react-native";
 
-
-
-// const screenHeight = Dimensions.get("window").height;
-// const screenWidth = Dimensions.get("window").width;
-
-// const navHeight = 8;
-
-// const pixelsToSubtract = (screenHeight * navHeight) / 100;
-// const componentHeight = screenHeight - (screenHeight * navHeight) / 100;
 
 
 export default function GoogleMaps() {
 
-	//Coordinates of a location 
-    const cLatitude = 43.6436;
-	const cLongitude = -79.3791;
+	//animation stuff
+	const animationRef = React.useRef(LottieView);
 
-	//Zoom of the map
-    const delta = 0.058  
+	const [location, setLocation] = React.useState({});
+	const [lat, setLatitude] = React.useState({});
+	const [long, setLongitude] = React.useState({});
+	const [loading, setLoading] = React.useState(true);
 
-    const [ pinVisible ] = React.useState(true);
+	const [calloutVisible, setCalloutVisible] = React.useState(false);
+	const [poiName, setPoiName] = React.useState('');
+	const [poiAddress, setPoiAddress] = React.useState('');
+
+	const mapViewRef = React.createRef();
+
+	//requst users loactions
+	React.useEffect(() => {
+		(async () => {
+		  
+		  let { status } = await Location.requestForegroundPermissionsAsync();
+		  
+		  if (status !== 'granted') {
+			setErrorMsg('Permission to access location was denied');
+			return;
+		  }
 	
+		  const location = await Location.getCurrentPositionAsync({});
+		  setLatitude(location.coords.latitude);
+		  setLongitude(location.coords.longitude);
+		  setLocation(location);
+		  setLoading(false);
+
+		  setPin({
+			latitude: location.coords.latitude,
+			longitude: location.coords.longitude,
+		  });
+
+		})();
+	}, []);
+
+	//starting coordinates 
+    const cLatitude = JSON.stringify(lat)
+	const cLongitude = JSON.stringify(long)
+
+	//zoom of the map
+    const delta = 0.058;  
+
+    //pin visibility
+	const [ pinVisible ] = React.useState(true);
+	
+	//sets pin
 	const [ pin, setPin ] = React.useState({
 		latitude: cLatitude,
 		longitude: cLongitude
 	});
+
+	//sets region
 	const [ region, setRegion ] = React.useState({
 		latitude: cLatitude,
 		longitude: cLongitude,
@@ -38,6 +74,7 @@ export default function GoogleMaps() {
 		longitudeDelta: delta
 	});
 
+	//moves pin after being dragged
     const handlePinDragEnd = (e) => {
 		setPin({
 			latitude: e.nativeEvent.coordinate.latitude,
@@ -45,6 +82,7 @@ export default function GoogleMaps() {
 		});
 	};
 
+	//moves pin while scrolling through the maps
 	const handleRegionChange = (newRegion) => {
 		setRegion(newRegion);
 		setPin({
@@ -53,6 +91,7 @@ export default function GoogleMaps() {
         });
 	};
 
+	//moves pin on long press
 	const handleMapLongPress = (e) => {
 		const newPin = {
 		  latitude: e.nativeEvent.coordinate.latitude,
@@ -62,25 +101,87 @@ export default function GoogleMaps() {
 		setRegion(newPin);
 	};
 
-	const mapViewRef = React.createRef();
 	const handlePlaceSelected = (data, details) => {
+		//updates region with new coordinates
 		const selectedRegion = {
 			latitude: details.geometry.location.lat,
 			longitude: details.geometry.location.lng,
 			latitudeDelta: delta,
 			longitudeDelta: delta,
-		  };
+		};
+
+		//animation to move mapview to new loaction
 		mapViewRef.current.animateToRegion(selectedRegion,4000);
 		mapViewRef.current.animateCamera({ center: selectedRegion, altitude: 8000 }, { duration: 4000 });
+		
+		//Updates region and pin
 		setRegion(selectedRegion);
 		setPin({
 		  latitude: details.geometry.location.lat,
 		  longitude: details.geometry.location.lng,
 		});
+
+		// Extract and set POI information
+		const poiName = details.name;
+		const poiAddress = details.formatted_address;
+	
+		// Update variables
+		setPoiName(poiName);
+		setPoiAddress(poiAddress);
+	
+		// Shows callout
+		setCalloutVisible(true);
+
+		// Extract street address
+		const streetAddress = details.formatted_address;
+		// Extract opening hours
+		const currentOpeningHours = details.current_opening_hours.weekday_text.join('\n');
+		// Extract name
+		const name = details.name;
+
+		console.log('Name:', name);
+		console.log('Street Address:', streetAddress);
+		console.log('Current Opening Hours:', currentOpeningHours);
+		
 	}
 
+	React.useEffect(() => {
+		if (animationRef.current) {
+			setTimeout(() => {
+			  animationRef.current?.reset();
+			  animationRef.current?.play();
+			}, 100);
+		  }
+	}, [animationRef.current]);
+
+	//loading screen added to update map with users loaction
+	if (loading) {
+
+		return (
+			<View style={styles.loadingContainer}>
+			  	<View style={styles.animationContainer}>
+				  <LottieView
+					style={styles.loadingAnimation} 
+					ref={animationRef}
+					loop={true}
+					speed={1}
+					source={require("../../../loading.json")}/>
+				</View>
+				<Text style={styles.loadingText}>Fetching your location... &#127758;</Text>
+			</View>
+		);
+	}
+
+	//set the loaction of the user
+	const initialRegion = {
+		latitude: lat,
+		longitude: long,
+		latitudeDelta: delta,
+		longitudeDelta: delta,
+	};
+
 	return (
-		<View>
+		<View style={styles.container}>
 			<GooglePlacesAutocomplete 
 				placeholder='What is your Destination...'
 				fetchDetails={true}
@@ -96,52 +197,59 @@ export default function GoogleMaps() {
 					location: `${region.latitude}, ${region.longitude}`
 				}}
 				styles={{
-					container: { flex: 0, position: "absolute", width: "90%", zIndex: 1, marginTop: 20,  alignSelf: 'center' },
+					container: { flex: 0, position: "absolute", width: "90%", zIndex: 1, marginTop: 60,  alignSelf: 'center' },
 					listView: { backgroundColor: "white" },
 					textInput: { backgroundColor: "rgba(255, 255, 255, 0.85)", color: 'black', top: 0 },
 				}}
 				style={styles.searchBar}
-				onPress={handlePlaceSelected}
+				onPress={handlePlaceSelected} //updates loaction based on google search
 
 			/>
 			<MapView
 				ref={mapViewRef} // Assign the ref to the MapView
 				style={styles.map}
-				initialRegion={region} // Inital location on new load
-				onRegionChange={handleRegionChange}
-				onLongPress={handleMapLongPress} 
-				provider={PROVIDER_GOOGLE}
-				customMapStyle={CustomMapStyle}
-				//provider="google"
+				initialRegion={initialRegion} // Inital location on new load
+				//onLongPress={handleMapLongPress}
+				onPress={() => {setCalloutVisible(true);}}
+				//onRegionChange={handleRegionChange} 
+				//provider={PROVIDER_GOOGLE}
+				//customMapStyle={CustomMapStyle}
 
 			>
                 {pinVisible && ( // Show the pin if pinVisible is true
 					<Marker
-						coordinate={pin}
-						pinColor= "#FC0FC0"
-						draggable={true}
-						onDragEnd={handlePinDragEnd}
+						coordinate={pin} 	//set pin to coordinates
+						pinColor= "#FC0FC0" //pink
+						draggable={false}	//ability to drag pin around
+						//onDragEnd={handlePinDragEnd}
 					>
 						<Callout>
-							<Text>Your Current Location</Text>
+							{calloutVisible && ( //displays if true
+								<View style={styles.calloutContent}>
+									<Text style={styles.calloutText}>Name: {poiName}</Text>
+									<Text style={styles.calloutText}>Address: {poiAddress}</Text>
+								</View>
+							)}
 						</Callout>
 					</Marker>
 				)}
-                {/* draw a circle on the map centered around pin */}
-				{/* <Circle center={pin} radius={1000} fillColor="rgba(255, 192, 203, 0.3)" strokeColor="grey"/> */}
+				<Circle center={pin} radius={1000} fillColor="rgba(255, 192, 203, 0.3)" strokeColor="grey"/> 
 
 				{/* shows current coordinate */}
-				<Text style={styles.text}>Current latitude: {region.latitude.toFixed(3)}{'\n'}</Text>
-      			<Text style={styles.text}>Current longitude: {region.longitude.toFixed(3)}</Text>
+				<Text style={styles.text}>Current latitude: {lat.toFixed(3)}{'\n'}</Text>
+      			<Text style={styles.text}>Current longitude: {long.toFixed(3)}</Text>
 			</MapView>
 		</View>
 	)
 }
 
 const styles = StyleSheet.create({
+	container:{
+		flex: 1,
+	},
 	map: {
 		width: Dimensions.get("window").width,
-		height: Dimensions.get("window").height - 180,
+		height: Dimensions.get("window").height,
 		justifyContent: "flex-end",
     	alignItems: "center",
 	},
@@ -153,5 +261,33 @@ const styles = StyleSheet.create({
 		marginBottom: 20,
 		backgroundColor: 'lightgrey',
 		fontSize: 20,
-	}
+	},
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+	animationContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 200,
+        height: 200,
+    },
+    loadingAnimation: {
+        width: '100%',
+        height: '100%',
+    },
+	loadingText: {
+		marginTop: 10,
+		color: '#333',
+		fontSize: 16,
+	},
+	calloutContent: {
+        maxHeight: 1000, 
+		maxWidth: 1000, 
+    },
+    calloutText: {
+        fontSize: 16,
+        marginVertical: 4,
+    },
 })
