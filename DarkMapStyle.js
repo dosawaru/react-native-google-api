@@ -1,4 +1,5 @@
-export const CustomMapStyle = [
+export const CustomMapStyle = 
+[
     {
       "elementType": "geometry",
       "stylers": [
