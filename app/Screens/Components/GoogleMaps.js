@@ -173,10 +173,12 @@ export default function GoogleMaps() {
 		const poiLong = details.geometry.location.lng;
 		const rating = details.rating;
 	
-		// Update variablesr
+		// Update variables
 		setPoiName(poiName);
 		setPoiAddress(poiAddress);
 		setPoiHours(poiHours);
+		setLatitude(poiLat);
+		setLongitude(poiLong);
 	
 		// Shows callout
 		setCalloutVisible(true);
@@ -351,7 +353,7 @@ const styles = StyleSheet.create({
 		bottom: 0,
 		width: Dimensions.get('window').width, 
 		height: Dimensions.get('window').height/4, 
-		backgroundColor: 'rgba(186, 179, 179, 0.9)',
+		backgroundColor: 'rgba(186, 179, 179, 0.95)',
 		borderRadius: 20, 
 		margin: 10, 
 	},
