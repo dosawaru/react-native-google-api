@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Dimensions, StyleSheet, Text, View, ActivityIndicator } from "react-native"
+import { Dimensions, StyleSheet, Text, View, ActivityIndicator, Image } from "react-native"
 import MapView, { Callout, Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps"
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import {NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} from '@env'
@@ -7,8 +7,7 @@ import {NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} from '@env'
 import {CustomMapStyle} from '../../../NightMapStyle'
 import * as Location from 'expo-location';
 import LottieView from "lottie-react-native";
-
-
+import Carousel from 'react-native-snap-carousel';
 
 export default function GoogleMaps() {
 
@@ -68,6 +67,15 @@ export default function GoogleMaps() {
 		longitude: cLongitude
 	});
 
+	//setPOI info
+	const [poiData, setPoiData] = React.useState([
+		{
+		  poiName: 'Data Not Avaliable',
+		  poiAddress: 'Data Not Avaliable',
+		  poiHours: 'Data Not Avaliable',
+		},
+	]);
+
 	//sets region
 	const [ region, setRegion ] = React.useState({
 		latitude: cLatitude,
@@ -76,66 +84,66 @@ export default function GoogleMaps() {
 		longitudeDelta: delta
 	});
 
-	////moves pin after being dragged
-    // const handlePinDragEnd = (e) => {
-	// 	setPin({
-	// 		latitude: e.nativeEvent.coordinate.latitude,
-	// 		longitude: e.nativeEvent.coordinate.longitude
-	// 	});
-	// };
-
-	////moves pin while scrolling through the maps
-	// const handleRegionChange = (newRegion) => {
-	// 	setRegion(newRegion);
-	// 	setPin({
-    //         latitude: newRegion.latitude,
-    //         longitude: newRegion.longitude
-    //     });
-	// };
-
-	////moves pin on long press
-	// const handleMapLongPress = (e) => {
-	// 	const newPin = {
-	// 	  latitude: e.nativeEvent.coordinate.latitude,
-	// 	  longitude: e.nativeEvent.coordinate.longitude,
-	// 	};
-	// 	setPin(newPin);
-	// 	setRegion(newPin);
-	// };
-
-	const handlePoiClick = (event, details) => {
-
-		const { placeId, name } = event.nativeEvent;
-		const { coordinate } = event.nativeEvent;
- 		const { latitude, longitude } = coordinate;
-		
-		// Log POI information to the console
-		console.log('Place ID:', placeId);
-		console.log('Name:', name);
-		console.log('-----------------');
-
-		//Updates region and pin
-		//setRegion(selectedRegion);
+	//moves pin after being dragged
+    const handlePinDragEnd = (e) => {
 		setPin({
-			latitude: latitude,
-			longitude: longitude,
+			latitude: e.nativeEvent.coordinate.latitude,
+			longitude: e.nativeEvent.coordinate.longitude
 		});
-
-		const selectedRegion = {
-			latitude: latitude,
-			longitude: longitude,
-			latitudeDelta: delta,
-			longitudeDelta: delta,
-		};
- 
-		//animation to move mapview to new loaction
-		mapViewRef.current.animateToRegion(selectedRegion,4000);	
-
-		setPoiName(name);
-
-		// Shows callout
-		setCalloutVisible(true);
 	};
+
+	//moves pin while scrolling through the maps
+	const handleRegionChange = (newRegion) => {
+		setRegion(newRegion);
+		setPin({
+            latitude: newRegion.latitude,
+            longitude: newRegion.longitude
+        });
+	};
+
+	//moves pin on long press
+	const handleMapLongPress = (e) => {
+		const newPin = {
+		  latitude: e.nativeEvent.coordinate.latitude,
+		  longitude: e.nativeEvent.coordinate.longitude,
+		};
+		setPin(newPin);
+		setRegion(newPin);
+	};
+
+	// const handlePoiClick = (event, details) => {
+
+	// 	const { placeId, name } = event.nativeEvent;
+	// 	const { coordinate } = event.nativeEvent;
+ 	// 	const { latitude, longitude } = coordinate;
+		
+	// 	// Log POI information to the console
+	// 	console.log('Place ID:', placeId);
+	// 	console.log('Name:', name);
+	// 	console.log('-----------------');
+
+	// 	//Updates region and pin
+	// 	setRegion(selectedRegion);
+	// 	setPin({
+	// 		latitude: latitude,
+	// 		longitude: longitude,
+	// 	});
+
+	// 	const selectedRegion = {
+	// 		latitude: latitude,
+	// 		longitude: longitude,
+	// 		latitudeDelta: delta,
+	// 		longitudeDelta: delta,
+	// 	};
+ 
+	// 	//animation to move mapview to new loaction
+	// 	mapViewRef.current.animateToRegion(selectedRegion,4000);	
+
+	// 	setPoiName(name);
+
+	// 	// Shows callout
+	// 	setCalloutVisible(true);
+	// };
 
 	const handlePlaceSelected = (data, details) => {
 		//updates region with new coordinates
@@ -160,8 +168,12 @@ export default function GoogleMaps() {
 		const poiName = details.name;
 		const poiAddress = details.formatted_address;
 		const poiHours = details.current_opening_hours.weekday_text.join('\n');
+		const place_id = details.place_id;
+		const poiLat = details.geometry.location.lat;
+		const poiLong = details.geometry.location.lng;
+		const rating = details.rating;
 	
-		// Update variables
+		// Update variablesr
 		setPoiName(poiName);
 		setPoiAddress(poiAddress);
 		setPoiHours(poiHours);
@@ -169,16 +181,15 @@ export default function GoogleMaps() {
 		// Shows callout
 		setCalloutVisible(true);
 
-		// Extract street address
-		const streetAddress = details.formatted_address;
-		// Extract opening hours
-		const currentOpeningHours = details.current_opening_hours.weekday_text.join('\n');
-		// Extract name
-		const name = details.name;
-
-		console.log('Name:', name);
-		console.log('Street Address:', streetAddress);
-		console.log('Current Opening Hours:', currentOpeningHours);
+		//console.log('Place ID:', place_id);
+		console.log('Name:', poiName);
+		console.log('Place ID:', place_id);
+		console.log('Lat:', poiLat);
+		console.log('Long:', poiLong);
+		console.log('Rating:', rating);
+		console.log('Street Address:', poiAddress);
+		console.log('Current Opening Hours:', poiHours);
+		console.log('-----------------------------------------------------------------')
 	}
 
 	//starts animation
@@ -228,7 +239,7 @@ export default function GoogleMaps() {
 					key: `${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`,
 					language: 'en',
 					components: "country:ca",
-					types: "establishment",
+					types: "bar",
 					radius: 90000,
 					location: `${region.latitude}, ${region.longitude}`
 				}}
@@ -252,7 +263,7 @@ export default function GoogleMaps() {
 				//onRegionChange={handleRegionChange} 
 				provider={PROVIDER_GOOGLE}
 				customMapStyle={CustomMapStyle}
-				onPoiClick={handlePoiClick}
+				//onPoiClick={handlePoiClick}
 
 			>
                 {pinVisible && ( 				// Show the pin if pinVisible is true
@@ -260,25 +271,28 @@ export default function GoogleMaps() {
 						coordinate={pin} 		//set pin to coordinates
 						pinColor= "#FC0FC0" 	//pink
 						draggable={false}		//ability to drag pin around
-						//onDragEnd={handlePinDragEnd}
 					>
-						<Callout>
-							{calloutVisible && (//displays if true
-								<View style={styles.calloutContent}>
-									<Text style={styles.calloutText}>Name: {poiName}</Text>
-									<Text style={styles.calloutText}>Address: {poiAddress}</Text>
-									<Text style={styles.calloutText}>Hours: {poiHours}</Text>
-								</View>
-							)}
-						</Callout>
 					</Marker>
 				)}
-				<Circle center={pin} radius={5000} fillColor="rgba(255, 192, 203, 0.3)" strokeColor="grey"/> 
+				<Circle center={pin} radius={2000} fillColor="rgba(255, 192, 203, 0.3)" strokeColor="grey"/> 
 
-				{/* shows current coordinate */}
-				<Text style={styles.text}>Current latitude: {lat.toFixed(3)}{'\n'}</Text>
-				<Text style={styles.text}>Current longitude: {long.toFixed(3)}</Text>
 			</MapView>
+			<Carousel
+				data={poiData}
+				renderItem={({}) => (
+					<View style={styles.carouselItem}>
+					<Text style={styles.carouselText}>Name: {poiName}{'\n'}</Text>
+					<Text style={styles.carouselText}>Address: {poiAddress}{'\n'}</Text>
+					<Text style={styles.carouselText}>Hours: {poiHours}{'\n'}</Text>
+					</View>
+				)}
+				sliderWidth={Dimensions.get('window').width - 20}
+				itemWidth={Dimensions.get('window').width - 20}
+				containerCustomStyle={styles.carouselContainer}
+			/>
+			{/* shows current coordinate */}
+			<Text style={styles.text}>Current latitude: {lat.toFixed(3)}{'\n'}</Text>
+			<Text style={styles.text}>Current longitude: {long.toFixed(3)}</Text>
 		</View>
 	)
 }
@@ -294,14 +308,13 @@ const styles = StyleSheet.create({
     	alignItems: "center",
 	},
 	text: {
-		justifyContent: 'center',
-        alignItems: 'center',
 		position: "absolute",
+		right: 20,
 		bottom: 0,
 		marginBottom: 20,
 		fontSize: 25,
 		fontWeight: '100',
-		backgroundColor: 'lightgrey'
+		zIndex: 1,
 	},
     loadingContainer: {
         flex: 1,
@@ -333,4 +346,18 @@ const styles = StyleSheet.create({
         marginVertical: 4,
 		paddingLeft: 10,
     },
+	carouselContainer: {
+		position: 'absolute',
+		bottom: 0,
+		width: Dimensions.get('window').width, 
+		height: Dimensions.get('window').height/4, 
+		backgroundColor: 'rgba(186, 179, 179, 0.9)',
+		borderRadius: 20, 
+		margin: 10, 
+	},
+	carouselItem: {
+		paddingHorizontal: 16, 
+		paddingTop: 10,
+		fontSize: 36, 
+	},
 })

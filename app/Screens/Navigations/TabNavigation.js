@@ -47,8 +47,8 @@ export default function TabNavigation() {
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 0,
-    // alignItems: 'center', // Center horizontally
-    // justifyContent: 'center', // Center vertically
+    flex: 0,
+    alignItems: 'center', // Center horizontally
+    justifyContent: 'center', // Center vertically
   },
 });
