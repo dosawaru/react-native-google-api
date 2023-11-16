@@ -12,8 +12,9 @@ A mobile application built with React Native that utilizes the Google Maps API t
 - Animated transitions when moving the map or selecting a location.
 - Loading screen with a fun animation during location fetching.
 
-## Screenshots
+## Demo
 
+https://github.com/dosawaru/react-native-google-api/assets/35234154/515892d4-1715-4547-8127-1b43792eccfc
 
 ## Technologies Used
 
