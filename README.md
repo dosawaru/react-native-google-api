@@ -7,8 +7,7 @@ A mobile application built with React Native that utilizes the Google Maps API t
 - Display a Google Map with customizable styles.
 - Search for locations using the Google Places API.
 - View details of selected Points of Interest (POI).
-- Automatically fetch the user's current location.
-- Customizable pin on the map.
+- Automatically fetch the user's current location and nearby bars/restaurants.
 - Animated transitions when moving the map or selecting a location.
 - Loading screen with a fun animation during location fetching.
 
@@ -38,8 +37,10 @@ https://github.com/dosawaru/react-native-google-api/assets/35234154/515892d4-171
 3. Add your Google Maps API Key to the @env file as NEXT_PUBLIC_GOOGLE_MAPS_API_KEY.
 4. Start the development server:
     ```bash
-    npx start
+    npx expo start -- --reset-cache (for the first run)
+    npx expo start 
     ```
+5. Run project using Expo Go
 
 ## Usage
 
@@ -47,4 +48,3 @@ https://github.com/dosawaru/react-native-google-api/assets/35234154/515892d4-171
 - The app will automatically fetch your location and display it on the map.
 - You can search for locations by typing in the search bar.
 - Select a location from the search results to view details and move the map to that location.
-- Customize the pin's appearance and behaviour on the map.
