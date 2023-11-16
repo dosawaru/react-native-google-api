@@ -1,225 +1,48 @@
-import * as React from 'react'
-import { Dimensions, StyleSheet, Text, View, ActivityIndicator, Image } from "react-native"
-import MapView, { Callout, Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps"
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import {NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} from '@env'
-//import {CustomMapStyle} from '../../../DarkMapStyle'
-import {CustomMapStyle} from '../../../NightMapStyle'
-import * as Location from 'expo-location';
+import * as React from "react";
+import { Dimensions, StyleSheet, Text, View} from "react-native";
+import MapView, { Circle, Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { NEXT_PUBLIC_GOOGLE_MAPS_API_KEY } from "@env";
+import { CustomMapStyle } from "../../../NightMapStyle";
+import * as Location from "expo-location";
 import LottieView from "lottie-react-native";
-import Carousel from 'react-native-snap-carousel';
+import Carousel from "react-native-snap-carousel";
+//import {CustomMapStyle} from '../../../DarkMapStyle'
 
-export default function GoogleMaps() {
-
-	//animation stuff
+export default function App() {
 	const animationRef = React.useRef(LottieView);
+	const mapViewRef = React.createRef();
 
 	const [location, setLocation] = React.useState({});
 	const [lat, setLatitude] = React.useState({});
 	const [long, setLongitude] = React.useState({});
 	const [loading, setLoading] = React.useState(true);
+	const [poiName, setPoiName] = React.useState("");
+	const [locationArray, setLocationArray] = React.useState({});
+	const [pinVisible, setPinVisible] = React.useState(false);
+	const [poiData, setPoiData] = React.useState([]);
+	const [searchedData, setSearchedData] = React.useState([]);
+	const [key, setKey] = React.useState(0); 
 
-	const [calloutVisible, setCalloutVisible] = React.useState(false);
-	const [poiName, setPoiName] = React.useState('');
-	const [poiAddress, setPoiAddress] = React.useState('');
-	const [poiHours, setPoiHours] = React.useState('');
+	let userSearchedData = [];
 
-	const mapViewRef = React.createRef();
+	const radius = 6000;
+	const delta = 0.1;
+	const searched = false;
 
-	//requst users loactions
-	React.useEffect(() => {
-		(async () => {
-		  
-		  let { status } = await Location.requestForegroundPermissionsAsync();
-		  
-		  if (status !== 'granted') {
-			setErrorMsg('Permission to access location was denied');
-			return;
-		  }
-	
-		  const location = await Location.getCurrentPositionAsync({});
-		  setLatitude(location.coords.latitude);
-		  setLongitude(location.coords.longitude);
-		  setLocation(location);
-		  setLoading(false);
-
-		  setPin({
-			latitude: location.coords.latitude,
-			longitude: location.coords.longitude,
-		  });
-
-		})();
-	}, []);
-
-	//starting coordinates 
-    const cLatitude = JSON.stringify(lat)
-	const cLongitude = JSON.stringify(long)
-
-	//zoom of the map
-    const delta = 0.058;  
-
-    //pin visibility
-	const [ pinVisible ] = React.useState(true);
-	
-	//sets pin
-	const [ pin, setPin ] = React.useState({
+	//sets pins
+	const [pin, setPin] = React.useState({
 		latitude: cLatitude,
-		longitude: cLongitude
+		longitude: cLongitude,
 	});
 
-	//setPOI info
-	const [poiData, setPoiData] = React.useState([
-		{
-		  poiName: 'Data Not Avaliable',
-		  poiAddress: 'Data Not Avaliable',
-		  poiHours: 'Data Not Avaliable',
-		},
-	]);
-
-	//sets region
-	const [ region, setRegion ] = React.useState({
+	//sets regions
+	const [region, setRegion] = React.useState({
 		latitude: cLatitude,
 		longitude: cLongitude,
 		latitudeDelta: delta,
-		longitudeDelta: delta
+		longitudeDelta: delta,
 	});
-
-	//moves pin after being dragged
-    const handlePinDragEnd = (e) => {
-		setPin({
-			latitude: e.nativeEvent.coordinate.latitude,
-			longitude: e.nativeEvent.coordinate.longitude
-		});
-	};
-
-	//moves pin while scrolling through the maps
-	const handleRegionChange = (newRegion) => {
-		setRegion(newRegion);
-		setPin({
-            latitude: newRegion.latitude,
-            longitude: newRegion.longitude
-        });
-	};
-
-	//moves pin on long press
-	const handleMapLongPress = (e) => {
-		const newPin = {
-		  latitude: e.nativeEvent.coordinate.latitude,
-		  longitude: e.nativeEvent.coordinate.longitude,
-		};
-		setPin(newPin);
-		setRegion(newPin);
-	};
-
-	// const handlePoiClick = (event, details) => {
-
-	// 	const { placeId, name } = event.nativeEvent;
-	// 	const { coordinate } = event.nativeEvent;
- 	// 	const { latitude, longitude } = coordinate;
-		
-	// 	// Log POI information to the console
-	// 	console.log('Place ID:', placeId);
-	// 	console.log('Name:', name);
-	// 	console.log('-----------------');
-
-	// 	//Updates region and pin
-	// 	setRegion(selectedRegion);
-	// 	setPin({
-	// 		latitude: latitude,
-	// 		longitude: longitude,
-	// 	});
-
-	// 	const selectedRegion = {
-	// 		latitude: latitude,
-	// 		longitude: longitude,
-	// 		latitudeDelta: delta,
-	// 		longitudeDelta: delta,
-	// 	};
- 
-	// 	//animation to move mapview to new loaction
-	// 	mapViewRef.current.animateToRegion(selectedRegion,4000);	
-
-	// 	setPoiName(name);
-
-	// 	// Shows callout
-	// 	setCalloutVisible(true);
-	// };
-
-	const handlePlaceSelected = (data, details) => {
-		//updates region with new coordinates
-		const selectedRegion = {
-			latitude: details.geometry.location.lat,
-			longitude: details.geometry.location.lng,
-			latitudeDelta: delta,
-			longitudeDelta: delta,
-		};
-
-		//animation to move mapview to new loaction
-		mapViewRef.current.animateToRegion(selectedRegion,4000);
-		
-		//Updates region and pin
-		setRegion(selectedRegion);
-		setPin({
-		  latitude: details.geometry.location.lat,
-		  longitude: details.geometry.location.lng,
-		});
-
-		// Extract and set POI information
-		const poiName = details.name;
-		const poiAddress = details.formatted_address;
-		const poiHours = details.current_opening_hours.weekday_text.join('\n');
-		const place_id = details.place_id;
-		const poiLat = details.geometry.location.lat;
-		const poiLong = details.geometry.location.lng;
-		const rating = details.rating;
-	
-		// Update variables
-		setPoiName(poiName);
-		setPoiAddress(poiAddress);
-		setPoiHours(poiHours);
-		setLatitude(poiLat);
-		setLongitude(poiLong);
-	
-		// Shows callout
-		setCalloutVisible(true);
-
-		//console.log('Place ID:', place_id);
-		console.log('Name:', poiName);
-		console.log('Place ID:', place_id);
-		console.log('Lat:', poiLat);
-		console.log('Long:', poiLong);
-		console.log('Rating:', rating);
-		console.log('Street Address:', poiAddress);
-		console.log('Current Opening Hours:', poiHours);
-		console.log('-----------------------------------------------------------------')
-	}
-
-	//starts animation
-	React.useEffect(() => {
-		if (animationRef.current) {
-			setTimeout(() => {
-			  animationRef.current?.reset();
-			  animationRef.current?.play();
-			}, 100);
-		  }
-	}, [animationRef.current]);
-
-	//loading screen added to update map with users loaction
-	if (loading) {
-		return (
-			<View style={styles.loadingContainer}>
-			  	<View style={styles.animationContainer}>
-				  <LottieView
-					style={styles.loadingAnimation} 
-					ref={animationRef}
-					loop={true}
-					speed={1}
-					source={require("../../../loading.json")}/>
-				</View>
-				<Text style={styles.loadingText}>Fetching your location... &#127758;</Text>
-			</View>
-		);
-	}
 
 	//set the loaction of the user
 	const initialRegion = {
@@ -229,137 +52,349 @@ export default function GoogleMaps() {
 		longitudeDelta: delta,
 	};
 
+	const cLatitude = JSON.stringify(lat);
+	const cLongitude = JSON.stringify(long);
+
+	//fetch nearby resturants
+	const fetchNearbyLocations = async (latitude, longitude, radius, searched) => {
+		try {
+		const response = await fetch(
+			`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=bar&key=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+		);
+
+		if (!response.ok) {
+			throw new Error("Network response was not ok");
+		}
+		const local_bars = await response.json();
+		let locations = local_bars.results.map((item) => ({
+			latitude: item.geometry.location.lat,
+			longitude: item.geometry.location.lng,
+			poiPlace_id: item.place_id,
+			poiName: item.name,
+			poiRating: item.rating,
+			poiAddress: item.vicinity,
+			poiHours: item.opening_hours.open_now,
+		}));
+		if(searched){
+			locations = [
+			{}, // Empty object as the first element
+			...local_bars.results.map((item) => ({
+				latitude: item.geometry.location.lat,
+				longitude: item.geometry.location.lng,
+				poiPlace_id: item.place_id,
+				poiName: item.name,
+				poiRating: item.rating,
+				poiAddress: item.vicinity,
+				poiHours: item.opening_hours.open_now,
+			}))
+			];
+			locations[0] = userSearchedData; 
+		} 
+
+		setPoiData(locations);
+		setKey((prevKey) => prevKey + 1); // Increment key to force re-render of Carousel when poiData is updated
+
+		setLocationArray(locations); // Store the fetched locations in state
+		setPinVisible(true); 
+		} catch (error) {
+		console.error("Error fetching nearby locations:", error);
+		}
+	};
+	
+	//requst users loactions
+	React.useEffect(() => {
+		(async () => {
+		let { status } = await Location.requestForegroundPermissionsAsync();
+
+		if (status !== "granted") {
+			setErrorMsg("Permission to access location was denied");
+			return;
+		}
+
+		const location = await Location.getCurrentPositionAsync({});
+		setLatitude(location.coords.latitude);
+		setLongitude(location.coords.longitude);
+		setLocation(location);
+
+		setPin({
+			latitude: location.coords.latitude,
+			longitude: location.coords.longitude,
+		});
+
+		// Call the separate fetchNearbyLocations function with the required parameters
+		await fetchNearbyLocations(location.coords.latitude, location.coords.longitude, radius, searched);
+
+		setLoading(false);
+		})();
+	}, []);
+
+	//gets poi details on map click
+	const handlePoiClick = (event, details) => {
+		const { placeId, name } = event.nativeEvent;
+		const { coordinate } = event.nativeEvent;
+		const { latitude, longitude } = coordinate;
+
+		//Updates region and pin
+		setPin({
+		latitude: latitude,
+		longitude: longitude,
+		});
+
+		const selectedRegion = {
+		latitude: latitude,
+		longitude: longitude,
+		latitudeDelta: delta,
+		longitudeDelta: delta,
+		};
+
+		//animation to move mapview to new loaction
+		mapViewRef.current.animateToRegion(selectedRegion, 4000);
+		setPoiName(name);
+	};
+
+	//updates poi info on search
+	const handlePlaceSelected = (data, details) => {
+		//updates region with new coordinates
+		const selectedRegion = {
+		latitude: details.geometry.location.lat,
+		longitude: details.geometry.location.lng,
+		latitudeDelta: delta,
+		longitudeDelta: delta,
+		};
+
+		mapViewRef.current.animateToRegion(selectedRegion, 4000);   //animation to move mapview to new loaction
+
+		//Updates region and pin
+		setRegion(selectedRegion);
+		setPin({
+		latitude: details.geometry.location.lat,
+		longitude: details.geometry.location.lng,
+		});
+
+		const locations = [
+		{
+			latitude: details.geometry.location.lat,
+			longitude: details.geometry.location.lng,
+			poiPlace_id: details.place_id,
+			poiName: details.name,
+			poiRating: details.rating,
+			poiAddress: details.vicinity,
+		},
+		];
+
+		setSearchedData([locations[0]]);
+		userSearchedData = locations[0];
+	};
+
+	//update mapview and region on carousel chnage
+	const handleCarouselItemChange = (index) => {
+		const selectedPlace = poiData[index]; // Get the lat and lng from the selected item in poiData
+
+		console.log("Current carousel item index:", index);
+		console.log(selectedPlace);
+
+		const selectedRegion = {
+		latitude: selectedPlace.latitude,
+		longitude: selectedPlace.longitude,
+		latitudeDelta: 0.06,
+		longitudeDelta: 0.06,
+		};
+
+		// Animate the map view to the selected region
+		if (mapViewRef.current) {
+		mapViewRef.current.animateToRegion(selectedRegion, 800);
+		}
+	};
+
+	//starts animation
+	React.useEffect(() => {
+		if (animationRef.current) {
+		setTimeout(() => {
+			animationRef.current?.reset();
+			animationRef.current?.play();
+		}, 100);
+		}
+	}, [animationRef.current]);
+
+	//loading screen added to update map with users loaction
+	if (loading) {
+		return (
+		<View style={styles.loadingContainer}>
+			<View style={styles.animationContainer}>
+			<LottieView
+				style={styles.loadingAnimation}
+				ref={animationRef}
+				loop={true}
+				speed={1}
+				source={require("../../../loading.json")}
+			/>
+			</View>
+			<Text style={styles.loadingText}>
+			Fetching your location... &#127758;
+			</Text>
+		</View>
+		);
+	}
+
 	return (
 		<View style={styles.container}>
-			<GooglePlacesAutocomplete 
-				placeholder='What is your Destination...'
-				fetchDetails={true}
-				GooglePlacesSearchQuery={{
-					rankby: "distance"
-				}}
-				query={{
-					key: `${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`,
-					language: 'en',
-					components: "country:ca",
-					types: "bar",
-					radius: 90000,
-					location: `${region.latitude}, ${region.longitude}`
-				}}
-				styles={{
-					container: { flex: 0, position: "absolute", width: "90%", zIndex: 1, marginTop: 60,  alignSelf: 'center' },
-					listView: { backgroundColor: "white" },
-					textInput: { backgroundColor: "rgba(255, 255, 255, 0.85)", color: 'black', top: 0 },
-				}}
-				style={styles.searchBar}
-				onPress={handlePlaceSelected} //updates loaction based on google search
-				
+		<GooglePlacesAutocomplete
+			placeholder="What is your Destination..."
+			fetchDetails={true}
+			GooglePlacesSearchQuery={{
+			rankby: "distance",
+			}}
+			query={{
+			key: `${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`,
+			language: "en",
+			components: "country:ca",
+			types: "bar",
+			radius: 30000,
+			location: `${region.latitude}, ${region.longitude}`,
+			}}
+			styles={{
+			container: styles.mapContainer,
+			listView: styles.listView,
+			textInput: styles.textInput,
+			searchBar: styles.searchBar,
+			}}
+			onPress={(data, details) => {
+			handlePlaceSelected(data, details); // You can also update other state or perform actions related to the selected place here
+			fetchNearbyLocations(details.geometry.location.lat, details.geometry.location.lng, radius, true);
+			}}
+		/>
+		<MapView
+			//userInterfaceStyle={'dark'} 	//dark mode for iOS
+			ref={mapViewRef} // Assign the ref to the MapView
+			style={styles.map}
+			initialRegion={initialRegion} // Inital location on new load
+			provider={PROVIDER_GOOGLE}
+			customMapStyle={CustomMapStyle}
+			onPoiClick={handlePoiClick}
+		>
+			{/*users location*/}
+			{pinVisible && (
+			<Marker coordinate={pin} pinColor="#FC0FC0" draggable={false} />
+			)}
 
+			{/*local bar locations*/}
+			{pinVisible &&
+			locationArray.map((location, index) => (
+				<Marker key={index} coordinate={location} />
+			))}
+
+			<Circle
+			center={pin}
+			radius={6000}
+			fillColor="rgba(255, 192, 203, 0.3)"
+			strokeColor="grey"
 			/>
-			<MapView
-			 	//userInterfaceStyle={'dark'} 	//dark mode for iOS
-				ref={mapViewRef} 				// Assign the ref to the MapView
-				style={styles.map}
-				initialRegion={initialRegion} 	// Inital location on new load
-				//onLongPress={handleMapLongPress}
-				onPress={() => {setCalloutVisible(true);}}
-				//onRegionChange={handleRegionChange} 
-				provider={PROVIDER_GOOGLE}
-				customMapStyle={CustomMapStyle}
-				//onPoiClick={handlePoiClick}
+		</MapView>
 
-			>
-                {pinVisible && ( 				// Show the pin if pinVisible is true
-					<Marker
-						coordinate={pin} 		//set pin to coordinates
-						pinColor= "#FC0FC0" 	//pink
-						draggable={false}		//ability to drag pin around
-					>
-					</Marker>
-				)}
-				<Circle center={pin} radius={2000} fillColor="rgba(255, 192, 203, 0.3)" strokeColor="grey"/> 
+		<Carousel
+			key={key}
+			data={poiData}
+			renderItem={({ item }) => (
+			<View style={styles.carouselItem}>
+				<Text style={styles.carouselText}>
+				Name: {item.poiName}
+				{"\n"}
+				</Text>
+				<Text style={styles.carouselText}>
+				Address: {item.poiAddress}
+				{"\n"}
+				</Text>
+				<Text style={styles.carouselText}>
+				Currently Open: {item.poiHours ? "Yes" : "No"}
+				{"\n"}
+				</Text>
+			</View>
+			)}
+			sliderWidth={Dimensions.get("window").width - 20}
+			itemWidth={Dimensions.get("window").width - 20}
+			containerCustomStyle={styles.carouselContainer}
+			onSnapToItem={handleCarouselItemChange}
+			activeSlideAlignment="start" 
+		/>
 
-			</MapView>
-			<Carousel
-				data={poiData}
-				renderItem={({}) => (
-					<View style={styles.carouselItem}>
-					<Text style={styles.carouselText}>Name: {poiName}{'\n'}</Text>
-					<Text style={styles.carouselText}>Address: {poiAddress}{'\n'}</Text>
-					<Text style={styles.carouselText}>Hours: {poiHours}{'\n'}</Text>
-					</View>
-				)}
-				sliderWidth={Dimensions.get('window').width - 20}
-				itemWidth={Dimensions.get('window').width - 20}
-				containerCustomStyle={styles.carouselContainer}
-			/>
-			{/* shows current coordinate */}
-			<Text style={styles.text}>Current latitude: {lat.toFixed(3)}{'\n'}</Text>
-			<Text style={styles.text}>Current longitude: {long.toFixed(3)}</Text>
+		{/* shows current coordinate */}
+		<Text style={styles.text}>
+			Current latitude: {lat.toFixed(3)}
+			{"\n"}
+		</Text>
+		<Text style={styles.text}>Current longitude: {long.toFixed(3)}</Text>
 		</View>
-	)
-}
+	);
+	}
 
-const styles = StyleSheet.create({
-	container:{
+	const styles = StyleSheet.create({
+	container: {
 		flex: 1,
 	},
 	map: {
 		width: Dimensions.get("window").width,
 		height: Dimensions.get("window").height,
 		justifyContent: "flex-end",
-    	alignItems: "center",
+		alignItems: "center",
 	},
 	text: {
 		position: "absolute",
 		right: 20,
 		bottom: 0,
 		marginBottom: 20,
-		fontSize: 25,
-		fontWeight: '100',
+		fontSize: 12,
+		fontWeight: "100",
 		zIndex: 1,
 	},
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-		backgroundColor: 'grey',
-    },
+	loadingContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "grey",
+	},
 	animationContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: 200,
-        height: 200,
-    },
-    loadingAnimation: {
-        width: '100%',
-        height: '100%',
-    },
+		justifyContent: "center",
+		alignItems: "center",
+		width: 200,
+		height: 200,
+	},
+	loadingAnimation: {
+		width: "100%",
+		height: "100%",
+	},
 	loadingText: {
 		marginTop: 10,
-		color: '#333',
+		color: "#333",
 		fontSize: 18,
 	},
-	calloutContent: {
-        maxHeight: 1000, 
-		maxWidth: 1000, 
-    },
-    calloutText: {
-        fontSize: 16,
-        marginVertical: 4,
-		paddingLeft: 10,
-    },
+	mapContainer: {
+		flex: 0,
+		position: "absolute",
+		width: "90%",
+		zIndex: 1,
+		marginTop: 60,
+		alignSelf: "center",
+	},
+	listView: {
+		backgroundColor: "white",
+	},
+	textInput: {
+		backgroundColor: "rgba(255, 255, 255, 0.85)",
+		color: "black",
+		top: 0,
+	},
 	carouselContainer: {
-		position: 'absolute',
+		position: "absolute",
 		bottom: 0,
-		width: Dimensions.get('window').width, 
-		height: Dimensions.get('window').height/4, 
-		backgroundColor: 'rgba(186, 179, 179, 0.95)',
-		borderRadius: 20, 
-		margin: 10, 
+		width: Dimensions.get("window").width,
+		height: Dimensions.get("window").height / 4,
+		backgroundColor: "rgba(186, 179, 179, 0.95)",
+		borderRadius: 20,
+		margin: 10,
 	},
 	carouselItem: {
-		paddingHorizontal: 16, 
+		paddingHorizontal: 16,
 		paddingTop: 10,
-		fontSize: 36, 
+		fontSize: 24,
 	},
-})
+});
