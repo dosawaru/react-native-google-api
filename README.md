@@ -22,7 +22,7 @@ https://github.com/dosawaru/react-native-google-api/assets/35234154/515892d4-171
 - React Native Maps
 - Expo Location
 - Lottie for animations
-- React Native Google Places Autocomplete
+- Google Places Autocomplete API
 
 ## Getting Started
 
