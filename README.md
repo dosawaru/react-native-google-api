@@ -12,7 +12,11 @@ A mobile application built with React Native that utilizes the Google Maps API t
 - Loading screen with a fun animation during location fetching.
 
 ## Demo
+![IMG_4380](https://github.com/dosawaru/react-native-google-api/assets/35234154/8fbaf9f8-440b-4679-bbea-dace924e3a6f)
 
+![RPReplay_Final1706984319](https://github.com/dosawaru/react-native-google-api/assets/35234154/e5eb40ad-073d-46cd-bd65-55b2cdac5997)
+
+![RPReplay_Final1706984319 (1)](https://github.com/dosawaru/react-native-google-api/assets/35234154/c98d3e05-fbe7-4cc9-8568-1f0946fc668a)
 
 ## Technologies Used
 
