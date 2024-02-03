@@ -13,7 +13,6 @@ A mobile application built with React Native that utilizes the Google Maps API t
 
 ## Demo
 
-https://github.com/dosawaru/react-native-google-api/assets/35234154/515892d4-1715-4547-8127-1b43792eccfc
 
 ## Technologies Used
 
