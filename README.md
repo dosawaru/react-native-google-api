@@ -7,7 +7,7 @@ A mobile application built with React Native that utilizes the Google Maps API t
 - Display a Google Map with customizable styles.
 - Search for locations using the Google Places API.
 - View details of selected Points of Interest (POI).
-- Automatically fetch the user's current location and nearby bars/restaurants.
+- Automatically fetch the user's current location and nearby restaurants.
 - Animated transitions when moving the map or selecting a location.
 - Loading screen with a fun animation during location fetching.
 
